@@ -22,16 +22,17 @@ echo -e $magenta "    \|__|     \|__|\|_______|\|_______|\|__| \|__|\|__|\|__| \
 echo -e $cyan "melkanea" $magenta "bash" $white "hestiacp" $magenta "nginx" $cyan "portopener" $coloroff
 
 # Check arguments
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <user> <port> <location>"
-    exit 1
+if [ "$#" -ne 4 ]; then
+  echo "Usage: $0 <user> <ip> <port> <location>"
+  exit 1
 fi
 
 # Assign arguments to variables
 user=$1
-port=$2
-location=$3
-ip=$(hostname -I | awk '{print $1}')
+port=$3
+location=$4
+ip=$2
+
 if [ $? -ne 0 ]; then
     echo -e "${red}Failed to get IP address${coloroff}"
     exit 1
