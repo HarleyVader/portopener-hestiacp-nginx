@@ -12,6 +12,9 @@ fi
 
 chown -R $user:$user "$home/$user/web/$domain/$nodeapp"
 
+# Create the .sock file using Python script
+python3 $home/$user/web/$domain/$nodeapp/create_sock.py
+
 # Check if file exists before removing it
 if [ -f "$home/$user/web/$domain/$nodeapp/app.sock" ]; then
   rm "$home/$user/web/$domain/$nodeapp/app.sock"
