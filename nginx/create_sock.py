@@ -1,7 +1,7 @@
 import socket
 import os
 
-sock_path = '/home/brandynette/web/bambisleep.chat/js-lmstudio-sdk/app.sock'
+sock_path = '$docroot/app.sock'
 
 # Remove the socket file if it already exists
 if os.path.exists(sock_path):

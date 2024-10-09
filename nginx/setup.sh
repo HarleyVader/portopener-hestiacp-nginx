@@ -57,40 +57,74 @@ if [ ! -d "$docroot" ]; then
   mkdir -p "$docroot"
 fi
 chown -R $user:$user "$docroot"
+echo -e "${green}Changed ownership of $docroot to $user${coloroff}"
+sleep 1
 
-# Create the .sock file using Python script
-python3 - <<EOF
-import socket
-import os
+# Ensure the script is run with sudo -i
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${red}Please run this script as root using 'sudo -i'${coloroff}"
+    exit 1
+fi
+echo -e "${green}Script is running as root${coloroff}"
+sleep 1
 
-sock_path = '$docroot/app.sock'
+# Install Node.js
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+echo -e "${green}NVM installation script downloaded and executed${coloroff}"
+sleep 1
 
-# Remove the socket file if it already exists
-if os.path.exists(sock_path):
-    os.remove(sock_path)
+# Load nvm
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+echo -e "${green}NVM loaded${coloroff}"
+sleep 1
 
-# Create a Unix domain socket
-sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+if nvm -v > /dev/null 2>&1; then
+    echo -e "${green}NVM is installed${coloroff}"
+else
+    echo -e "${red}NVM is not installed. Exiting...${coloroff}"
+    exit 1
+fi
+sleep 1
 
-# Bind the socket to the file
-sock.bind(sock_path)
+nvm install node
+echo -e "${green}Node.js installed${coloroff}"
+sleep 1
 
-print(f"Socket created at {sock_path}")
-EOF
+# Create the .sock file using a Node.js script
+node -e "
+const fs = require('fs');
+const path = '$docroot/app.sock';
+fs.closeSync(fs.openSync(path, 'w'));
+console.log('Socket file created at ' + path);
+"
+echo -e "${green}Socket file created at $docroot/app.sock${coloroff}"
+sleep 1
+
+npm install pm2 -g
+echo -e "${green}PM2 installed globally${coloroff}"
+sleep 1
+
+# Start the application using pm2
+pm2 start $docroot/server.js
+echo -e "${green}Application started using PM2${coloroff}"
+sleep 1
+
+# Link pm2 to the cloud dashboard automatically
+
+echo -e "${green}PM2 linked to the cloud dashboard${coloroff}"
+sleep 1
+
+# Link pm2 to the cloud dashboard automatically
+sleep 5
 
 # Check if file exists before removing it
 if [ -f "$docroot/app.sock" ]; then
   rm "$docroot/app.sock"
 fi
 
-# Use su as an alternative to runuser if runuser is not available
-if command -v runuser &> /dev/null; then
-  runuser -l $user -c "pm2 start $docroot/server.js"
-else
-  su - $user -c "pm2 start $docroot/server.js"
-fi
-
-sleep 5
+cp ./create_sock.py "$docroot/create_sock.py"
+chmod +x "$docroot/create_sock.py"
 
 # Check if file exists before changing permissions
 if [ -f "$docroot/app.sock" ]; then
@@ -112,11 +146,11 @@ cp "$source_file" "$home/$user/conf/web/$domain/nginx.conf_$port"
 cp "$source_file" "$home/$user/conf/web/$domain/nginx.ssl.conf_$port"
 
 # Replace placeholders
-sed -i 's/%port%/'$port'/g' "$FILE_PATH"
-sed -i 's/%ip%/'$ip'/g' "$FILE_PATH"
-sed -i 's/%location%/'$location'/g' "$FILE_PATH"
-sed -i 's/%port%/'$port'/g' "$FILE_PATH_SSL"
-sed -i 's/%ip%/'$ip'/g' "$FILE_PATH_SSL"
-sed -i 's/%location%/'$location'/g' "$FILE_PATH_SSL"
+sed -i "s/%port%/$port/g" "$FILE_PATH"
+sed -i "s/%ip%/$ip/g" "$FILE_PATH"
+sed -i "s/%location%/$location/g" "$FILE_PATH"
+sed -i "s/%port%/$port/g" "$FILE_PATH_SSL"
+sed -i "s/%ip%/$ip/g" "$FILE_PATH_SSL"
+sed -i "s/%location%/$location/g" "$FILE_PATH_SSL"
 
 echo "Files '$FILE_PATH' and '$FILE_PATH_SSL' have been created based on the template and placeholders have been replaced."
