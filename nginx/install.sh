@@ -18,9 +18,8 @@ echo -e $magenta "  \ \  \    \ \  \ \  \_|\ \ \  \____\ \ \ \ \  \ \  \ \  \ \ 
 echo -e $magenta "   \ \__\    \ \__\ \_______\ \_______\ \_\ \ \__\ \__\ \__\ \_\ \ \__\ \_______\ \__\ \__\ " $coloroff
 echo -e $magenta "    \|__|     \|__|\|_______|\|_______|\|__| \|__|\|__|\|__|\|__| \|__|\|_______|\|__|\|__|" $coloroff
 
-echo -e $cyan "melkanea $magenta bash $white hestiacp $magenta nginx $cyan portopener $coloroff
+echo -e $cyan "melkanea" $magenta "bash" $white "hestiacp" $magenta "nginx" $cyan "portopener" $coloroff
 
-# Check if three arguments are provided
 if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <user> <port> <location>"
     exit 1
@@ -31,13 +30,17 @@ location=$3
 user=$1
 
 ip=$(hostname -I | awk '{print $1}')
-home=/home
-#user=$(whoami)
-userapp=$(basename "$PWD")
-domain=$(hostname -d)
-nodeapp=nodeapp
-docroot=$home/$user/web/$domain/$nodeapp/$userapp
+if [ $? -ne 0 ]; then
+    echo -e "${red}Failed to get IP address${coloroff}"
+    exit 1
+fi
 
+home=/home
+
+domain=bambisleep.chat
+
+nodeapp=js-lmstrudio-sdk
+docroot=$home/$user/web/$domain/$nodeapp
 
 echo -e $magenta "user: "$user $coloroff
 echo -e $red "domain: "$domain $coloroff
